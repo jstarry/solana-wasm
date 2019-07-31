@@ -1,5 +1,4 @@
-
-let wasm;
+import * as wasm from './wasm_bg.wasm';
 
 let cachegetUint8Memory = null;
 function getUint8Memory() {
@@ -18,7 +17,9 @@ function passArray8ToWasm(arg) {
     return ptr;
 }
 
-let cachedTextEncoder = new TextEncoder('utf-8');
+const lTextEncoder = typeof TextEncoder === 'undefined' ? require('util').TextEncoder : TextEncoder;
+
+let cachedTextEncoder = new lTextEncoder('utf-8');
 
 let passStringToWasm;
 if (typeof cachedTextEncoder.encodeInto === 'function') {
@@ -83,7 +84,9 @@ function getInt32Memory() {
     return cachegetInt32Memory;
 }
 
-let cachedTextDecoder = new TextDecoder('utf-8');
+const lTextDecoder = typeof TextDecoder === 'undefined' ? require('util').TextDecoder : TextDecoder;
+
+let cachedTextDecoder = new lTextDecoder('utf-8');
 
 function getStringFromWasm(ptr, len) {
     return cachedTextDecoder.decode(getUint8Memory().subarray(ptr, ptr + len));
@@ -165,58 +168,16 @@ export class PublicKey {
     }
 }
 
-function init(module) {
-    if (typeof module === 'undefined') {
-        module = import.meta.url.replace(/\.js$/, '_bg.wasm');
-    }
-    let result;
-    const imports = {};
-    imports.wbg = {};
-    imports.wbg.__wbindgen_throw = function(arg0, arg1) {
-        throw new Error(getStringFromWasm(arg0, arg1));
-    };
-    imports.wbg.__wbindgen_rethrow = function(arg0) {
-        throw takeObject(arg0);
-    };
-    imports.wbg.__wbindgen_string_new = function(arg0, arg1) {
-        const ret = getStringFromWasm(arg0, arg1);
-        return addHeapObject(ret);
-    };
+export const __wbindgen_throw = function(arg0, arg1) {
+    throw new Error(getStringFromWasm(arg0, arg1));
+};
 
-    if (module instanceof URL || typeof module === 'string' || module instanceof Request) {
+export const __wbindgen_rethrow = function(arg0) {
+    throw takeObject(arg0);
+};
 
-        const response = fetch(module);
-        if (typeof WebAssembly.instantiateStreaming === 'function') {
-            result = WebAssembly.instantiateStreaming(response, imports)
-            .catch(e => {
-                console.warn("`WebAssembly.instantiateStreaming` failed. Assuming this is because your server does not serve wasm with `application/wasm` MIME type. Falling back to `WebAssembly.instantiate` which is slower. Original error:\n", e);
-                return response
-                .then(r => r.arrayBuffer())
-                .then(bytes => WebAssembly.instantiate(bytes, imports));
-            });
-        } else {
-            result = response
-            .then(r => r.arrayBuffer())
-            .then(bytes => WebAssembly.instantiate(bytes, imports));
-        }
-    } else {
-
-        result = WebAssembly.instantiate(module, imports)
-        .then(result => {
-            if (result instanceof WebAssembly.Instance) {
-                return { instance: result, module };
-            } else {
-                return result;
-            }
-        });
-    }
-    return result.then(({instance, module}) => {
-        wasm = instance.exports;
-        init.__wbindgen_wasm_module = module;
-
-        return wasm;
-    });
-}
-
-export default init;
+export const __wbindgen_string_new = function(arg0, arg1) {
+    const ret = getStringFromWasm(arg0, arg1);
+    return addHeapObject(ret);
+};
 
