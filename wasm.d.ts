@@ -1,6 +1,9 @@
 /* tslint:disable */
 /**
 */
+export function set_panic_hook(): void;
+/**
+*/
 export class PublicKey {
   free(): void;
 /**

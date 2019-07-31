@@ -1,5 +1,11 @@
 import * as wasm from './wasm_bg.wasm';
 
+/**
+*/
+export function set_panic_hook() {
+    wasm.set_panic_hook();
+}
+
 let cachegetUint8Memory = null;
 function getUint8Memory() {
     if (cachegetUint8Memory === null || cachegetUint8Memory.buffer !== wasm.memory.buffer) {
@@ -98,9 +104,18 @@ heap.fill(undefined);
 
 heap.push(undefined, null, true, false);
 
-function getObject(idx) { return heap[idx]; }
-
 let heap_next = heap.length;
+
+function addHeapObject(obj) {
+    if (heap_next === heap.length) heap.push(heap.length + 1);
+    const idx = heap_next;
+    heap_next = heap[idx];
+
+    heap[idx] = obj;
+    return idx;
+}
+
+function getObject(idx) { return heap[idx]; }
 
 function dropObject(idx) {
     if (idx < 36) return;
@@ -112,15 +127,6 @@ function takeObject(idx) {
     const ret = getObject(idx);
     dropObject(idx);
     return ret;
-}
-
-function addHeapObject(obj) {
-    if (heap_next === heap.length) heap.push(heap.length + 1);
-    const idx = heap_next;
-    heap_next = heap[idx];
-
-    heap[idx] = obj;
-    return idx;
 }
 /**
 */
@@ -167,6 +173,29 @@ export class PublicKey {
         return v0;
     }
 }
+
+export const __wbg_new_59cb74e423758ede = function() {
+    const ret = new Error();
+    return addHeapObject(ret);
+};
+
+export const __wbg_stack_558ba5917b466edd = function(arg0, arg1) {
+    const ret = getObject(arg1).stack;
+    const ret0 = passStringToWasm(ret);
+    const ret1 = WASM_VECTOR_LEN;
+    getInt32Memory()[arg0 / 4 + 0] = ret0;
+    getInt32Memory()[arg0 / 4 + 1] = ret1;
+};
+
+export const __wbg_error_4bb6c2a97407129a = function(arg0, arg1) {
+    const v0 = getStringFromWasm(arg0, arg1).slice();
+    wasm.__wbindgen_free(arg0, arg1 * 1);
+    console.error(v0);
+};
+
+export const __wbindgen_object_drop_ref = function(arg0) {
+    takeObject(arg0);
+};
 
 export const __wbindgen_throw = function(arg0, arg1) {
     throw new Error(getStringFromWasm(arg0, arg1));

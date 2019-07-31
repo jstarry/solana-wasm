@@ -1,5 +1,6 @@
 /* tslint:disable */
 export const memory: WebAssembly.Memory;
+export function set_panic_hook(): void;
 export function __wbg_publickey_free(a: number): void;
 export function publickey_new(a: number, b: number): number;
 export function publickey_fromString(a: number, b: number): number;
